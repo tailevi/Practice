@@ -8,10 +8,10 @@ import java.util.List;
 @Entity
 @Builder
 @Data
-@Table(name ="product")
+@Table(name ="Product")
 @NoArgsConstructor
 @AllArgsConstructor
-public class products {
+public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -32,7 +32,7 @@ public class products {
     String availabilityStatus;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", referencedColumnName = "id")
-    List<reviews> reviews;
+    List<Reviews> reviews;
     String returnPolicy;
     String thumbnail;
     List<String>images;
