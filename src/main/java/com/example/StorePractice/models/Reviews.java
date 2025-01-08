@@ -9,16 +9,16 @@ import lombok.NoArgsConstructor;
 @Entity
 @Builder
 @Data
-@Table(name ="reviews")
+@Table(name ="Reviews")
 @NoArgsConstructor
 @AllArgsConstructor
-public class reviews {
+public class Reviews {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     Long id;
     Integer rating;
-    String commnet;
+    String comment;
     String date;
     String reviewerName;
     String reviewerEmail;
