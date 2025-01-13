@@ -16,11 +16,12 @@ import java.util.stream.Collectors;
 @Service
 public class ProductRequestService {
     @Value("${dummy-json}")
-    public static String url;
+    public String url;
     @Autowired
     private RestTemplate URLRequest;
 
     public ProductsResponse findAll(){
+        System.out.println(url);
         ProductsResponse prod = URLRequest.getForObject(url, ProductsResponse.class);
         assert prod != null;
         List<Product> pordList = prod.getProducts().stream()
