@@ -6,6 +6,7 @@ import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.response.ProductResponse;
 import com.example.StorePractice.payload.response.ProductsResponse;
 import com.example.StorePractice.payload.response.ReviewsResponse;
+import com.example.StorePractice.reposetories.ProductRepo;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,21 +21,24 @@ import java.util.stream.Collectors;
 public class ProductRequestService {
     @Value("${dummy-json}")
     public String url;
+
+    @Autowired
+    public ProductRepo productRepor;
     @Autowired
     private RestTemplate URLRequest;
 
     public ProductsResponse findAll(){
         ProductsResponse prod = URLRequest.getForObject(url, ProductsResponse.class);
-        assert prod != null;
+        assert prod!= null;
         List<Product> pordList = prod.getProducts().stream()
-                .map(this::mapToProductEntity)
-                .collect(Collectors.toList());
+                    .map(this::mapToProductEntity)
+                    .collect(Collectors.toList());
+        productRepor.saveAll(pordList);
         return prod;
     }
 
-    private Product mapToProductEntity(ProductResponse response) {
+    private Product mapToProductEntity(@NonNull ProductResponse response) {
         Product product = Product.builder()
-                .id(response.getId())
                 .title(response.getTitle())
                 .description(response.getDescription())
                 .category(response.getCategory())
@@ -60,7 +64,7 @@ public class ProductRequestService {
         return product;
     }
 
-    private Reviews mapToReviewEntity(ReviewsResponse reviewResponse, Product product) {
+    private Reviews mapToReviewEntity(@NonNull ReviewsResponse reviewResponse, Product product) {
         return Reviews.builder()
                 .rating(reviewResponse.getRating())
                 .comment(reviewResponse.getComment())
@@ -72,7 +76,7 @@ public class ProductRequestService {
     @SneakyThrows
     public String deleteProduct(Long id){
         URLRequest.delete(url+"/"+id);
-        return "Product ID" + id + " was deleted";
+        return "ProductController ID" + id + " was deleted";
     }
 
     @SneakyThrows
