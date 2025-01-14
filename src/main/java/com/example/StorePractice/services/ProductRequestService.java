@@ -6,6 +6,7 @@ import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.response.ProductResponse;
 import com.example.StorePractice.payload.response.ProductsResponse;
 import com.example.StorePractice.payload.response.ReviewsResponse;
+import com.example.StorePractice.reposetories.ProductRepo;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ import java.util.stream.Collectors;
 public class ProductRequestService {
     @Value("${dummy-json}")
     public String url;
+
+    @Autowired
+    public ProductRepo productRepor;
     @Autowired
     private RestTemplate URLRequest;
 
@@ -29,6 +33,7 @@ public class ProductRequestService {
         List<Product> pordList = prod.getProducts().stream()
                 .map(this::mapToProductEntity)
                 .collect(Collectors.toList());
+        productRepor.saveAll(pordList);
         return prod;
     }
 
