@@ -2,6 +2,7 @@ package com.example.StorePractice.controllers;
 
 import com.example.StorePractice.models.Product;
 import com.example.StorePractice.payload.request.ProductRequest;
+import com.example.StorePractice.payload.response.GenericResponses;
 import com.example.StorePractice.payload.response.ProductResponse;
 import com.example.StorePractice.services.ProductService;
 import lombok.AllArgsConstructor;
@@ -32,4 +33,15 @@ public class ProductController {
     public ResponseEntity<ProductResponse> findProductById(@RequestBody ProductRequest productRequest){
         return ResponseEntity.ok(productService.findProductById(productRequest.getId()));
     }
+
+    @PostMapping(value = "/addProduct")
+    public ResponseEntity<GenericResponses> addProduct(@RequestBody ProductRequest productRequest){
+        return  ResponseEntity.ok(productService.AddProduct(productRequest));
+    }
+
+    @PostMapping(value = "/updateProduct")
+    public ResponseEntity<GenericResponses> updateProduct(@RequestBody ProductRequest productRequest){
+        return  ResponseEntity.ok(productService.updateProduct(productRequest));
+    }
+
 }
