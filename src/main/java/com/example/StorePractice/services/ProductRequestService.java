@@ -29,17 +29,16 @@ public class ProductRequestService {
 
     public ProductsResponse findAll(){
         ProductsResponse prod = URLRequest.getForObject(url, ProductsResponse.class);
-        assert prod != null;
+        assert prod!= null;
         List<Product> pordList = prod.getProducts().stream()
-                .map(this::mapToProductEntity)
-                .collect(Collectors.toList());
+                    .map(this::mapToProductEntity)
+                    .collect(Collectors.toList());
         productRepor.saveAll(pordList);
         return prod;
     }
 
-    private Product mapToProductEntity(ProductResponse response) {
+    private Product mapToProductEntity(@NonNull ProductResponse response) {
         Product product = Product.builder()
-                .id(response.getId())
                 .title(response.getTitle())
                 .description(response.getDescription())
                 .category(response.getCategory())
@@ -65,7 +64,7 @@ public class ProductRequestService {
         return product;
     }
 
-    private Reviews mapToReviewEntity(ReviewsResponse reviewResponse, Product product) {
+    private Reviews mapToReviewEntity(@NonNull ReviewsResponse reviewResponse, Product product) {
         return Reviews.builder()
                 .rating(reviewResponse.getRating())
                 .comment(reviewResponse.getComment())
@@ -77,7 +76,7 @@ public class ProductRequestService {
     @SneakyThrows
     public String deleteProduct(Long id){
         URLRequest.delete(url+"/"+id);
-        return "Product ID" + id + " was deleted";
+        return "ProductController ID" + id + " was deleted";
     }
 
     @SneakyThrows
