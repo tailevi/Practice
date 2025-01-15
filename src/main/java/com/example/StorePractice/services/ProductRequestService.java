@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 public class ProductRequestService {
     @Value("${dummy-json}")
-    public String url;
+    public String URL;
 
     @Autowired
     public ProductRepo productRepor;
@@ -28,7 +28,7 @@ public class ProductRequestService {
     private RestTemplate URLRequest;
 
     public ProductsResponse findAll(){
-        ProductsResponse prod = URLRequest.getForObject(url, ProductsResponse.class);
+        ProductsResponse prod = URLRequest.getForObject(URL, ProductsResponse.class);
         assert prod!= null;
         List<Product> pordList = prod.getProducts().stream()
                     .map(this::mapToProductEntity)
@@ -75,18 +75,18 @@ public class ProductRequestService {
     }
     @SneakyThrows
     public String deleteProduct(Long id){
-        URLRequest.delete(url+"/"+id);
+        URLRequest.delete(URL+"/"+id);
         return "ProductController ID" + id + " was deleted";
     }
 
     @SneakyThrows
     public ProductResponse findProductById(Long id){
-        return URLRequest.getForObject(url+"/"+id,ProductResponse.class);
+        return URLRequest.getForObject(URL+"/"+id,ProductResponse.class);
     }
 
     @SneakyThrows
     public  ProductResponse addProduct(ProductRequest productRequest){
-        return  URLRequest.postForObject(url+"/add",productRequest, ProductResponse.class );
+        return  URLRequest.postForObject(URL+"/add",productRequest, ProductResponse.class );
     }
 
     @SneakyThrows
@@ -110,7 +110,7 @@ public class ProductRequestService {
         product.setMinimumOrderQuantity(productRequest.getMinimumOrderQuantity());
         product.setThumbnail(productRequest.getThumbnail());
         product.setImages(productRequest.getImages());
-        return URLRequest.postForObject(url+"/"+productRequest.getId(),productRequest, ProductResponse.class );
+        return URLRequest.postForObject(URL+"/"+productRequest.getId(),productRequest, ProductResponse.class );
     }
 
 }

@@ -2,6 +2,8 @@ package com.example.StorePractice.services;
 
 import com.example.StorePractice.exceptions.ProductsServiceException;
 import com.example.StorePractice.models.Product;
+import com.example.StorePractice.models.ProductDTO;
+import com.example.StorePractice.models.Reviews;
 import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.response.GenericResponses;
 import com.example.StorePractice.payload.response.ProductResponse;
@@ -12,6 +14,7 @@ import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,6 +28,12 @@ public class ProductService {
     @Autowired
     public ReviewesRepo reviewesRepo;
 
+    @Autowired
+    public RedisTemplate redisTemplate;
+
+    private  static final String PRODUCT_KEY = "_product";
+    private  static final String REVIEW_KEY = "_review";
+
     public List<Product> findAllProducts(){return productRepo.findAll();}
 
     @SneakyThrows
@@ -34,16 +43,27 @@ public class ProductService {
     }
 
     @SneakyThrows
-    public ProductResponse findProductById(@NonNull long id){
+    @Transactional
+    public ProductDTO findProductById(@NonNull long id){
+        Product cachedProduct = (Product) redisTemplate.opsForHash().get(PRODUCT_KEY, id);
+        ProductDTO productResponse;
+
+        if(cachedProduct !=null){
+            List<Reviews> reviewsList = (List<Reviews>) redisTemplate.opsForHash().get(REVIEW_KEY , id);
+            cachedProduct.setReviews(reviewsList);
+            productResponse = mapProduct(cachedProduct);
+            return productResponse;
+        }
         Product product = productRepo.findById(id).orElseThrow(() -> new RuntimeException());
-        ProductResponse productResponse = mapProduct(product);
+        productResponse = mapProduct(product);
+        redisTemplate.opsForHash().put(PRODUCT_KEY, productResponse.getId(), product);
         return productResponse;
     }
 
     @SneakyThrows
     @Transactional
-    private  ProductResponse mapProduct(Product product){
-        return ProductResponse.builder()
+    private ProductDTO mapProduct(Product product){
+        return ProductDTO.builder()
                 .id(product.getId())
                 .title(product.getTitle())
                 .brand(product.getBrand())

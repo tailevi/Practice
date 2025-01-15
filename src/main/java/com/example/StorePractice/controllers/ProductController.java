@@ -1,6 +1,7 @@
 package com.example.StorePractice.controllers;
 
 import com.example.StorePractice.models.Product;
+import com.example.StorePractice.models.ProductDTO;
 import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.response.GenericResponses;
 import com.example.StorePractice.payload.response.ProductResponse;
@@ -30,7 +31,7 @@ public class ProductController {
     }
 
     @GetMapping(value = "/findProductById")
-    public ResponseEntity<ProductResponse> findProductById(@RequestBody ProductRequest productRequest){
+    public ResponseEntity<ProductDTO> findProductById(@RequestBody ProductRequest productRequest){
         return ResponseEntity.ok(productService.findProductById(productRequest.getId()));
     }
 
