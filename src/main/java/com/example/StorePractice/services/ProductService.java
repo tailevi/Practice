@@ -38,6 +38,7 @@ public class ProductService {
 
     @SneakyThrows
     public String deleteProductById(@NonNull long id){
+        redisTemplate.opsForHash().delete(PRODUCT_KEY,id);
         productRepo.deleteById(id);
         return "Product with the following id: "+ id +" was deleted along with his reviews";
     }
@@ -137,6 +138,8 @@ public class ProductService {
             Optional.ofNullable(productRequest.getImages()).ifPresent(existingProduct::setImages);
 
             productRepo.save(existingProduct);
+            redisTemplate.opsForValue().set(PRODUCT_KEY, mapProduct(existingProduct));
+
             return GenericResponses.builder()
                     .id(existingProduct.getId())
                     .title(existingProduct.getTitle())
@@ -144,8 +147,6 @@ public class ProductService {
                     .build();
         }
         throw new ProductsServiceException("Item with ID " + productRequest.getId() + " was not found or could not be deleted");
-
     }
-
 
 }
