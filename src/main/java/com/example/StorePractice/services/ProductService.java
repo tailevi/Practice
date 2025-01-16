@@ -5,10 +5,13 @@ import com.example.StorePractice.exceptions.ProductsServiceException;
 import com.example.StorePractice.models.Product;
 import com.example.StorePractice.models.ProductDTO;
 import com.example.StorePractice.models.Reviews;
+import com.example.StorePractice.models.ReviewsDTO;
 import com.example.StorePractice.payload.request.ProductRequest;
+import com.example.StorePractice.payload.request.ReviewRequest;
 import com.example.StorePractice.payload.response.GenericResponses;
 import com.example.StorePractice.payload.response.ProductResponse;
 import com.example.StorePractice.payload.response.ResponseEnum;
+import com.example.StorePractice.payload.response.ReviewsResponse;
 import com.example.StorePractice.reposetories.ProductRepo;
 import com.example.StorePractice.reposetories.ReviewesRepo;
 import jakarta.transaction.Transactional;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -31,6 +35,9 @@ public class ProductService {
 
     @Autowired
     public RedisTemplate redisTemplate;
+
+    @Autowired
+    public RedisTemplate<String, List<ReviewsDTO>> reviewRedisTemplet;
 
     private  static final String PRODUCT_KEY = "_product";
     private  static final String REVIEW_KEY = "_review";
@@ -48,7 +55,7 @@ public class ProductService {
     @SneakyThrows
     @Transactional
     @LogUpdate
-    public ProductDTO findProductById(@NonNull ProductRequest productRequest){
+    public ProductDTO findProductById(@NonNull ProductRequest productRequest) throws RuntimeException{
         Product cachedProduct = (Product) redisTemplate.opsForHash().get(PRODUCT_KEY, productRequest.getId());
         ProductDTO productResponse;
 
@@ -58,13 +65,16 @@ public class ProductService {
             productResponse = mapProduct(cachedProduct);
             return productResponse;
         }
+
         Product product = productRepo.findById(productRequest.getId()).orElseThrow(() -> new RuntimeException());
         productResponse = mapProduct(product);
         redisTemplate.opsForHash().put(PRODUCT_KEY, productResponse.getId(), product);
+        productResponse.setReviews(getCechedReviews(product.getId(),product));
+
         return productResponse;
     }
 
-    @SneakyThrows
+
     private ProductDTO mapProduct(Product product){
         return ProductDTO.builder()
                 .id(product.getId())
@@ -84,6 +94,30 @@ public class ProductService {
                 .warrantyInformation(product.getWarrantyInformation())
                 .shippingInformation(product.getShippingInformation())
                 .build();
+    }
+
+
+    @Transactional
+    private List<ReviewsDTO> getCechedReviews(Long id, Product cachedProduc){
+        List<ReviewsDTO>  reviewsDTOS = reviewRedisTemplet.opsForValue().get(REVIEW_KEY+id);
+        if(reviewsDTOS!= null){
+            return reviewsDTOS;
+        }
+        if(cachedProduc.getReviews() != null && !cachedProduc.getReviews().isEmpty()){
+            List<Reviews> reviewsList = cachedProduc.getReviews();
+            reviewsDTOS = reviewsList.stream().map(this::mapToReviewDTO).collect(Collectors.toList());
+        }
+            reviewRedisTemplet.opsForValue().set(REVIEW_KEY+id,reviewsDTOS);
+            return reviewsDTOS;
+    }
+
+
+    private ReviewsDTO mapToReviewDTO(Reviews review) {
+        ReviewsDTO reviewDTO = new ReviewsDTO();
+        reviewDTO.setId(review.getId());
+        reviewDTO.setComment(review.getComment());
+        reviewDTO.setRating(review.getRating());
+        return reviewDTO;
     }
     @SneakyThrows
     @Transactional
@@ -151,6 +185,28 @@ public class ProductService {
                     .build();
         }
         throw new ProductsServiceException("Item with ID " + productRequest.getId() + " was not found or could not be deleted");
+    }
+
+    public GenericResponses addReview(@NonNull Long id, ReviewRequest reviewRequest){
+        Product  product =  productRepo.findById(id).orElseThrow();
+
+        Reviews reviews = Reviews.builder()
+                .rating(reviewRequest.getRating())
+                .reviewerName(reviewRequest.getReviewerName())
+                .reviewerEmail(reviewRequest.getReviewerEmail())
+                .date(reviewRequest.getDate())
+                .comment(reviewRequest.getComment())
+                .build();
+        product.getReviews().add(reviews);
+        productRepo.save(product);
+
+
+
+        return GenericResponses.builder()
+                .id(reviews.getId())
+                .title(reviews.getReviewerName())
+                .message(ResponseEnum.ADDED.toString())
+                .build();
     }
 
 }

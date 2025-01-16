@@ -27,7 +27,7 @@ public class ProductDTO {
     String warrantyInformation;
     String shippingInformation;
     String availabilityStatus;
-    List<Reviews> reviews;
+    List<ReviewsDTO> reviews;
     String returnPolicy;
     String thumbnail;
     List<String>images;
