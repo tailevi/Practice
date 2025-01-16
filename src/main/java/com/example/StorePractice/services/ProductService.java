@@ -1,5 +1,6 @@
 package com.example.StorePractice.services;
 
+import com.example.StorePractice.annotations.LogUpdate;
 import com.example.StorePractice.exceptions.ProductsServiceException;
 import com.example.StorePractice.models.Product;
 import com.example.StorePractice.models.ProductDTO;
@@ -37,32 +38,33 @@ public class ProductService {
     public List<Product> findAllProducts(){return productRepo.findAll();}
 
     @SneakyThrows
-    public String deleteProductById(@NonNull long id){
-        redisTemplate.opsForHash().delete(PRODUCT_KEY,id);
-        productRepo.deleteById(id);
-        return "Product with the following id: "+ id +" was deleted along with his reviews";
+    @LogUpdate
+    public ResponseEnum deleteProductById(@NonNull ProductRequest productRequest){
+        redisTemplate.opsForHash().delete(PRODUCT_KEY,productRequest.getId());
+        productRepo.deleteById(productRequest.getId());
+        return ResponseEnum.DELETED;
     }
 
     @SneakyThrows
     @Transactional
-    public ProductDTO findProductById(@NonNull long id){
-        Product cachedProduct = (Product) redisTemplate.opsForHash().get(PRODUCT_KEY, id);
+    @LogUpdate
+    public ProductDTO findProductById(@NonNull ProductRequest productRequest){
+        Product cachedProduct = (Product) redisTemplate.opsForHash().get(PRODUCT_KEY, productRequest.getId());
         ProductDTO productResponse;
 
         if(cachedProduct !=null){
-            List<Reviews> reviewsList = (List<Reviews>) redisTemplate.opsForHash().get(REVIEW_KEY , id);
+            List<Reviews> reviewsList = (List<Reviews>) redisTemplate.opsForHash().get(REVIEW_KEY , productRequest.getId());
             cachedProduct.setReviews(reviewsList);
             productResponse = mapProduct(cachedProduct);
             return productResponse;
         }
-        Product product = productRepo.findById(id).orElseThrow(() -> new RuntimeException());
+        Product product = productRepo.findById(productRequest.getId()).orElseThrow(() -> new RuntimeException());
         productResponse = mapProduct(product);
         redisTemplate.opsForHash().put(PRODUCT_KEY, productResponse.getId(), product);
         return productResponse;
     }
 
     @SneakyThrows
-    @Transactional
     private ProductDTO mapProduct(Product product){
         return ProductDTO.builder()
                 .id(product.getId())
@@ -85,6 +87,7 @@ public class ProductService {
     }
     @SneakyThrows
     @Transactional
+    @LogUpdate
     public GenericResponses AddProduct( @NonNull ProductRequest productRequest){
         Product product = Product.builder()
                 .title(productRequest.getTitle())
@@ -114,6 +117,7 @@ public class ProductService {
 
     @SneakyThrows
     @Transactional
+    @LogUpdate
     public GenericResponses updateProduct(@NonNull ProductRequest productRequest){
         Optional<Product> productOptional = productRepo.findById(productRequest.getId());
 

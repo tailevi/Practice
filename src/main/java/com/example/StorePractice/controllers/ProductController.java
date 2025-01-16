@@ -5,6 +5,7 @@ import com.example.StorePractice.models.ProductDTO;
 import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.response.GenericResponses;
 import com.example.StorePractice.payload.response.ProductResponse;
+import com.example.StorePractice.payload.response.ResponseEnum;
 import com.example.StorePractice.services.ProductService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,13 +27,13 @@ public class ProductController {
     }
 
     @DeleteMapping(value = "/deleteProduct")
-    public ResponseEntity<String > deleteProduct(@RequestBody ProductRequest productRequest){
-        return ResponseEntity.ok(productService.deleteProductById(productRequest.getId()));
+    public ResponseEntity<ResponseEnum> deleteProduct(@RequestBody ProductRequest productRequest){
+        return ResponseEntity.ok(productService.deleteProductById(productRequest));
     }
 
     @GetMapping(value = "/findProductById")
     public ResponseEntity<ProductDTO> findProductById(@RequestBody ProductRequest productRequest){
-        return ResponseEntity.ok(productService.findProductById(productRequest.getId()));
+        return ResponseEntity.ok(productService.findProductById(productRequest));
     }
 
     @PostMapping(value = "/addProduct")
