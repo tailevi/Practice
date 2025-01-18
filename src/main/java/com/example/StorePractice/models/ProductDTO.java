@@ -1,21 +1,17 @@
 package com.example.StorePractice.models;
 
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.util.List;
 
-@Entity
 @Builder
 @Data
-@Table(name ="ProductController")
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+public class ProductDTO {
     Long id;
     String title;
     String description;
@@ -31,9 +27,7 @@ public class Product implements Serializable {
     String warrantyInformation;
     String shippingInformation;
     String availabilityStatus;
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_id", referencedColumnName = "id")
-    List<Reviews> reviews;
+    List<ReviewsDTO> reviews;
     String returnPolicy;
     String thumbnail;
     List<String>images;
