@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name ="_user")
+@Table(name ="account")
 public class User {
     @Id
     @GeneratedValue

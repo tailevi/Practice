@@ -5,6 +5,7 @@ import com.example.StorePractice.models.Reviews;
 import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.response.ProductResponse;
 import com.example.StorePractice.payload.response.ProductsResponse;
+import com.example.StorePractice.payload.response.ResponseEnum;
 import com.example.StorePractice.payload.response.ReviewsResponse;
 import com.example.StorePractice.reposetories.ProductRepo;
 import lombok.NonNull;
@@ -74,9 +75,9 @@ public class ProductRequestService {
                 .build();
     }
     @SneakyThrows
-    public String deleteProduct(Long id){
+    public ResponseEnum deleteProduct(Long id){
         URLRequest.delete(URL+"/"+id);
-        return "ProductController ID" + id + " was deleted";
+        return ResponseEnum.DELETED;
     }
 
     @SneakyThrows

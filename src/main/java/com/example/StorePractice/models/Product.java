@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Builder
 @Data
-@Table(name ="ProductController")
+@Table(name ="product")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product implements Serializable {
