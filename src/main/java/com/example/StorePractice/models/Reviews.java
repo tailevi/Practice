@@ -11,7 +11,7 @@ import java.io.Serializable;
 @Entity
 @Builder
 @Data
-@Table(name ="Reviews")
+@Table(name ="reviews")
 @NoArgsConstructor
 @AllArgsConstructor
 public class Reviews implements Serializable {

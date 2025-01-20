@@ -46,16 +46,19 @@ public class ProductService {
 
     @SneakyThrows
     @LogUpdate
-    public ResponseEnum deleteProductById(@NonNull ProductRequest productRequest){
+    public GenericResponses deleteProductById(@NonNull ProductRequest productRequest){
         redisTemplate.opsForHash().delete(PRODUCT_KEY,productRequest.getId());
         productRepo.deleteById(productRequest.getId());
-        return ResponseEnum.DELETED;
+        return GenericResponses.builder()
+                .message("Product was deleted")
+                .id(productRequest.getId())
+                .build();
     }
 
     @SneakyThrows
     @Transactional
     @LogUpdate
-    public ProductDTO findProductById(@NonNull ProductRequest productRequest) throws RuntimeException{
+    public ProductDTO findProductById(@NonNull ProductRequest productRequest){
         Product cachedProduct = (Product) redisTemplate.opsForHash().get(PRODUCT_KEY, productRequest.getId());
         ProductDTO productResponse;
 
@@ -66,7 +69,7 @@ public class ProductService {
             return productResponse;
         }
 
-        Product product = productRepo.findById(productRequest.getId()).orElseThrow(() -> new RuntimeException());
+        Product product = productRepo.findById(productRequest.getId()).orElseThrow();
         productResponse = mapProduct(product);
         redisTemplate.opsForHash().put(PRODUCT_KEY, productResponse.getId(), product);
         productResponse.setReviews(getCechedReviews(product.getId(),product));
@@ -187,6 +190,7 @@ public class ProductService {
         throw new ProductsServiceException("Item with ID " + productRequest.getId() + " was not found or could not be deleted");
     }
 
+    @Transactional
     public GenericResponses addReview(@NonNull Long id, ReviewRequest reviewRequest){
         Product  product =  productRepo.findById(id).orElseThrow();
 

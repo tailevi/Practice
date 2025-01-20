@@ -3,6 +3,7 @@ package com.example.StorePractice.controllers;
 import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.response.ProductResponse;
 import com.example.StorePractice.payload.response.ProductsResponse;
+import com.example.StorePractice.payload.response.ResponseEnum;
 import com.example.StorePractice.services.ProductRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class ProductRequestController {
     }
 
     @DeleteMapping(value ="/deleteProduct")
-    public ResponseEntity<String> deleteProduct(@RequestBody ProductRequest productRequest){
+    public ResponseEntity<ResponseEnum> deleteProduct(@RequestBody ProductRequest productRequest){
         return  ResponseEntity.ok(productRequestService.deleteProduct(productRequest.getId()));
     }
     @RequestMapping(value ="/returnProductById")
