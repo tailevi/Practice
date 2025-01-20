@@ -46,10 +46,13 @@ public class ProductService {
 
     @SneakyThrows
     @LogUpdate
-    public ResponseEnum deleteProductById(@NonNull ProductRequest productRequest){
+    public GenericResponses deleteProductById(@NonNull ProductRequest productRequest){
         redisTemplate.opsForHash().delete(PRODUCT_KEY,productRequest.getId());
         productRepo.deleteById(productRequest.getId());
-        return ResponseEnum.DELETED;
+        return GenericResponses.builder()
+                .message("Product was deleted")
+                .id(productRequest.getId())
+                .build();
     }
 
     @SneakyThrows

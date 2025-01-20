@@ -27,7 +27,7 @@ public class ProductController {
     }
 
     @DeleteMapping(value = "/deleteProduct")
-    public ResponseEntity<ResponseEnum> deleteProduct(@RequestBody ProductRequest productRequest){
+    public ResponseEntity<GenericResponses> deleteProduct(@RequestBody ProductRequest productRequest){
         return ResponseEntity.ok(productService.deleteProductById(productRequest));
     }
 
