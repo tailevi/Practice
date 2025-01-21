@@ -10,6 +10,17 @@ spring:
     port: 6379
     redis:
       time-to-live: 60000
+  cloud:
+    gateway:
+      routes:
+        - id: requestratelimiter_route
+          uri: http://localhost:8080/api
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
   jpa:
     open-in-view: true
     hibernate:
@@ -20,6 +31,7 @@ spring:
         format_sql: true
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
 logging:
   level:
     org.springframework.web.servlet.handler.HandlerMappingIntrospector: error
