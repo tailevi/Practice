@@ -2,6 +2,7 @@ package com.example.StorePractice.services;
 
 import com.example.StorePractice.annotations.LogUpdate;
 import com.example.StorePractice.exceptions.ProductsServiceException;
+import com.example.StorePractice.exceptions.RateLimiterException;
 import com.example.StorePractice.models.Product;
 import com.example.StorePractice.models.ProductDTO;
 import com.example.StorePractice.models.Reviews;
@@ -9,11 +10,10 @@ import com.example.StorePractice.models.ReviewsDTO;
 import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.request.ReviewRequest;
 import com.example.StorePractice.payload.response.GenericResponses;
-import com.example.StorePractice.payload.response.ProductResponse;
 import com.example.StorePractice.payload.response.ResponseEnum;
-import com.example.StorePractice.payload.response.ReviewsResponse;
 import com.example.StorePractice.reposetories.ProductRepo;
 import com.example.StorePractice.reposetories.ReviewesRepo;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -59,22 +59,27 @@ public class ProductService {
     @Transactional
     @LogUpdate
     public ProductDTO findProductById(@NonNull ProductRequest productRequest){
-        Product cachedProduct = (Product) redisTemplate.opsForHash().get(PRODUCT_KEY, productRequest.getId());
-        ProductDTO productResponse;
+        try {
+            Product cachedProduct = (Product) redisTemplate.opsForHash().get(PRODUCT_KEY, productRequest.getId());
+            ProductDTO productResponse;
 
-        if(cachedProduct !=null){
-            List<Reviews> reviewsList = (List<Reviews>) redisTemplate.opsForHash().get(REVIEW_KEY , productRequest.getId());
-            cachedProduct.setReviews(reviewsList);
-            productResponse = mapProduct(cachedProduct);
+            if (cachedProduct != null) {
+                List<Reviews> reviewsList = (List<Reviews>) redisTemplate.opsForHash().get(REVIEW_KEY, productRequest.getId());
+                cachedProduct.setReviews(reviewsList);
+                productResponse = mapProduct(cachedProduct);
+                return productResponse;
+            }
+
+            Product product = productRepo.findById(productRequest.getId())
+                    .orElseThrow(() -> new ProductsServiceException("product was not found for the id: "+ productRequest.getId()));
+            productResponse = mapProduct(product);
+            redisTemplate.opsForHash().put(PRODUCT_KEY, productResponse.getId(), product);
+            productResponse.setReviews(getCechedReviews(product.getId(), product));
+
             return productResponse;
+        }catch (RequestNotPermitted e){
+            throw new RateLimiterException("Rate limit exceeded. Please try again later.", e);
         }
-
-        Product product = productRepo.findById(productRequest.getId()).orElseThrow();
-        productResponse = mapProduct(product);
-        redisTemplate.opsForHash().put(PRODUCT_KEY, productResponse.getId(), product);
-        productResponse.setReviews(getCechedReviews(product.getId(),product));
-
-        return productResponse;
     }
 
 
