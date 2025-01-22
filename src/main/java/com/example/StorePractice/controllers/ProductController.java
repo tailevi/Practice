@@ -7,6 +7,7 @@ import com.example.StorePractice.payload.response.GenericResponses;
 import com.example.StorePractice.payload.response.ProductResponse;
 import com.example.StorePractice.payload.response.ResponseEnum;
 import com.example.StorePractice.services.ProductService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ public class ProductController {
         return ResponseEntity.ok(productService.deleteProductById(productRequest));
     }
 
+    @RateLimiter(name = "default")
     @GetMapping(value = "/findProductById")
     public ResponseEntity<ProductDTO> findProductById(@RequestBody ProductRequest productRequest){
         return ResponseEntity.ok(productService.findProductById(productRequest));
