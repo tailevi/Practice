@@ -27,6 +27,7 @@ public class ProductController {
         return ResponseEntity.ok(productService.findAllProducts());
     }
 
+    @RateLimiter(name = "default")
     @DeleteMapping(value = "/deleteProduct")
     public ResponseEntity<GenericResponses> deleteProduct(@RequestBody ProductRequest productRequest){
         return ResponseEntity.ok(productService.deleteProductById(productRequest));
@@ -46,6 +47,11 @@ public class ProductController {
     @PostMapping(value = "/updateProduct")
     public ResponseEntity<GenericResponses> updateProduct(@RequestBody ProductRequest productRequest){
         return  ResponseEntity.ok(productService.updateProduct(productRequest));
+    }
+
+    @PostMapping(value = "/addReview")
+    public ResponseEntity<GenericResponses> addReview(@RequestBody ProductRequest productRequest){
+        return  ResponseEntity.ok(productService.addReview(productRequest.getId(), productRequest.getReviewRequests().get(0)));
     }
 
 }

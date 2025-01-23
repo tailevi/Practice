@@ -47,12 +47,16 @@ public class ProductService {
     @SneakyThrows
     @LogUpdate
     public GenericResponses deleteProductById(@NonNull ProductRequest productRequest){
-        redisTemplate.opsForHash().delete(PRODUCT_KEY,productRequest.getId());
-        productRepo.deleteById(productRequest.getId());
-        return GenericResponses.builder()
-                .message("Product was deleted")
-                .id(productRequest.getId())
-                .build();
+        try {
+            redisTemplate.opsForHash().delete(PRODUCT_KEY, productRequest.getId());
+            productRepo.deleteById(productRequest.getId());
+            return GenericResponses.builder()
+                    .message("Product was deleted")
+                    .id(productRequest.getId())
+                    .build();
+         }catch (RequestNotPermitted e){
+        throw new RateLimiterException("Rate limit exceeded. Please try again later.", e);
+        }
     }
 
     @SneakyThrows
@@ -195,9 +199,11 @@ public class ProductService {
         throw new ProductsServiceException("Item with ID " + productRequest.getId() + " was not found or could not be deleted");
     }
 
+    @LogUpdate
+    @SneakyThrows
     @Transactional
     public GenericResponses addReview(@NonNull Long id, ReviewRequest reviewRequest){
-        Product  product =  productRepo.findById(id).orElseThrow();
+        Product  product =  productRepo.findById(id).orElseThrow( () -> new ProductsServiceException("product was not found for the id: "+ id));
 
         Reviews reviews = Reviews.builder()
                 .rating(reviewRequest.getRating())
@@ -208,8 +214,7 @@ public class ProductService {
                 .build();
         product.getReviews().add(reviews);
         productRepo.save(product);
-
-
+        reviewRedisTemplet.opsForHash().put(REVIEW_KEY, reviews.getId(), reviews);
 
         return GenericResponses.builder()
                 .id(reviews.getId())
