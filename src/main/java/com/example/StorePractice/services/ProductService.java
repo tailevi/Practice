@@ -213,7 +213,10 @@ public class ProductService {
                 .date(reviewRequest.getDate())
                 .comment(reviewRequest.getComment())
                 .build();
-        product.getReviews().add(reviews);
+        List<Reviews> NewReviews= product.getReviews();
+        NewReviews.add(reviews);
+        product.setReviews(NewReviews);
+
         productRepo.save(product);
         reviewRedisTemplet.opsForHash().put(REVIEW_KEY, reviews.getId(), reviews);
 
