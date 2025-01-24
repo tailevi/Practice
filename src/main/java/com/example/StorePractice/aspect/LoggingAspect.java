@@ -1,6 +1,6 @@
 package com.example.StorePractice.aspect;
 
-import com.example.StorePractice.models.Product;
+
 import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.request.ReviewRequest;
 import org.aspectj.lang.JoinPoint;

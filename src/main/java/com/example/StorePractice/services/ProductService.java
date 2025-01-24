@@ -202,8 +202,9 @@ public class ProductService {
     @LogUpdate
     @SneakyThrows
     @Transactional
-    public GenericResponses addReview(@NonNull Long id, ReviewRequest reviewRequest){
-        Product  product =  productRepo.findById(id).orElseThrow( () -> new ProductsServiceException("product was not found for the id: "+ id));
+    public GenericResponses addReview(@NonNull ProductRequest productRequest){
+        Product  product =  productRepo.findById(productRequest.getId()).orElseThrow( () -> new ProductsServiceException("product was not found for the id: "+ id));
+        ReviewRequest reviewRequest = productRequest.getReviewRequests().get(0);
 
         Reviews reviews = Reviews.builder()
                 .rating(reviewRequest.getRating())

@@ -51,7 +51,7 @@ public class ProductController {
 
     @PostMapping(value = "/addReview")
     public ResponseEntity<GenericResponses> addReview(@RequestBody ProductRequest productRequest){
-        return  ResponseEntity.ok(productService.addReview(productRequest.getId(), productRequest.getReviewRequests().get(0)));
+        return  ResponseEntity.ok(productService.addReview(productRequest));
     }
 
 }
