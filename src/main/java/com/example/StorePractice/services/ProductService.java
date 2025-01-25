@@ -203,27 +203,35 @@ public class ProductService {
     @SneakyThrows
     @Transactional
     public GenericResponses addReview(@NonNull ProductRequest productRequest){
-        Product  product =  productRepo.findById(productRequest.getId()).orElseThrow( () -> new ProductsServiceException("product was not found for the id: "+ id));
-        ReviewRequest reviewRequest = productRequest.getReviewRequests().get(0);
+        Product  product =  productRepo.findById(productRequest.getId()).orElseThrow( () -> new ProductsServiceException("product was not found for the id: "+ productRequest.getId()));
 
-        Reviews reviews = Reviews.builder()
-                .rating(reviewRequest.getRating())
-                .reviewerName(reviewRequest.getReviewerName())
-                .reviewerEmail(reviewRequest.getReviewerEmail())
-                .date(reviewRequest.getDate())
-                .comment(reviewRequest.getComment())
-                .build();
-        List<Reviews> NewReviews= product.getReviews();
-        NewReviews.add(reviews);
-        product.setReviews(NewReviews);
+        if(!productRequest.getReviewRequests().isEmpty()) {
+            List<ReviewRequest> reviewRequest = productRequest.getReviewRequests();
+            for(int i = 0 ; i< reviewRequest.size();i++)
+            {
+                Reviews reviews = Reviews.builder()
+                        .rating(reviewRequest.get(i).getRating())
+                        .reviewerName(reviewRequest.get(i).getReviewerName())
+                        .reviewerEmail(reviewRequest.get(i).getReviewerEmail())
+                        .date(reviewRequest.get(i).getDate())
+                        .comment(reviewRequest.get(i).getComment())
+                        .build();
 
-        productRepo.save(product);
-        reviewRedisTemplet.opsForHash().put(REVIEW_KEY, reviews.getId(), reviews);
+                List<Reviews> NewReviews = product.getReviews();
+                NewReviews.add(reviews);
+                product.setReviews(NewReviews);
+                reviewRedisTemplet.opsForHash().put(REVIEW_KEY, reviews.getId(), reviews);
+            }
+            productRepo.save(product);
 
+            return GenericResponses.builder()
+                    .title("reviews added successfully ")
+                    .message(ResponseEnum.ADDED.toString())
+                    .build();
+        }
         return GenericResponses.builder()
-                .id(reviews.getId())
-                .title(reviews.getReviewerName())
-                .message(ResponseEnum.ADDED.toString())
+                .message("There was not Review submitted")
+                .id(productRequest.getId())
                 .build();
     }
 
