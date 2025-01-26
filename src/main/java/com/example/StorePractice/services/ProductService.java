@@ -208,20 +208,21 @@ public class ProductService {
         if(!productRequest.getReviewRequests().isEmpty()) {
             List<ReviewRequest> reviewRequest = productRequest.getReviewRequests();
 
-            reviewRequest.stream().map(request  -> Reviews.builder()
+            List<Reviews> NewReviews = reviewRequest.stream()
+                    .map(request -> Reviews.builder()
                     .rating(request .getRating())
                     .reviewerName(request .getReviewerName())
                     .reviewerEmail(request .getReviewerEmail())
                     .date(request .getDate())
                     .comment(request .getComment())
-                    .build()).forEach(reviews -> {
-                        List<Reviews> NewReviews = product.getReviews();
-                        NewReviews.add(reviews);
-                        product.setReviews(NewReviews);
-                        reviewRedisTemplet.opsForHash().put(REVIEW_KEY, reviews.getId(), reviews);
-                    });
+                    .build()).toList();
 
-            productRepo.save(product);
+            product.getReviews().addAll(NewReviews);
+
+            NewReviews.forEach(reviews ->
+                    reviewRedisTemplet.opsForHash().put(REVIEW_KEY, reviews.getId(), reviews)
+            );
+
             productRepo.save(product);
 
             return GenericResponses.builder()
