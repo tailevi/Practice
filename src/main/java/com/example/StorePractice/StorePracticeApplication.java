@@ -10,4 +10,5 @@ public class StorePracticeApplication {
 		SpringApplication.run(StorePracticeApplication.class, args);
 	}
 
+
 }

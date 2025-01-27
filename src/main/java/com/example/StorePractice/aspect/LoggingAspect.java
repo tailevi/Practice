@@ -1,6 +1,6 @@
 package com.example.StorePractice.aspect;
 
-import com.example.StorePractice.models.Product;
+
 import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.request.ReviewRequest;
 import org.aspectj.lang.JoinPoint;
@@ -30,7 +30,7 @@ public class LoggingAspect {
             logger.info("Method '{}' successfully updated product with ID: {}", methodName, productId);
         }
 
-        if (arg[0] instanceof  ProductRequest) {
+        if (arg[0] instanceof  ReviewRequest) {
             ReviewRequest ReviewRequest = (ReviewRequest) arg[0];
             Long reviewRequestId = ReviewRequest.getId();
             logger.info("Method '{}' successfully updated product with ID: {}", methodName, reviewRequestId);

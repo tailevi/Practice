@@ -26,6 +26,7 @@ public class ProductRequest {
     String shippingInformation;
     String availabilityStatus;
     String returnPolicy;
+    List <ReviewRequest> reviewRequests;
     Integer minimumOrderQuantity;
     MetaResponse meta;
     String thumbnail;
