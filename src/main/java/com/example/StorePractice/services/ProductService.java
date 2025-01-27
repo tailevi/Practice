@@ -208,7 +208,7 @@ public class ProductService {
         if(!productRequest.getReviewRequests().isEmpty()) {
             List<ReviewRequest> reviewRequest = productRequest.getReviewRequests();
 
-            List<Reviews> NewReviews = reviewRequest.stream()
+            List<Reviews> newReviews = reviewRequest.stream()
                     .map(request -> Reviews.builder()
                     .rating(request .getRating())
                     .reviewerName(request .getReviewerName())
@@ -217,9 +217,11 @@ public class ProductService {
                     .comment(request .getComment())
                     .build()).toList();
 
-            product.getReviews().addAll(NewReviews);
+            List<Reviews> reviewsToSave = product.getReviews();
+            reviewsToSave.addAll(newReviews);
+            product.setReviews(reviewsToSave);
 
-            NewReviews.forEach(reviews ->
+            newReviews.forEach(reviews ->
                     reviewRedisTemplet.opsForHash().put(REVIEW_KEY, reviews.getId(), reviews)
             );
 
