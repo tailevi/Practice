@@ -20,6 +20,25 @@ spring:
         format_sql: true
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  redis:
+    host: localhost        # Redis server hostname
+    port: 6379             # Redis server port
+    password:              # Redis password if any
+    database: 0            # Redis database index
+    timeout: 5000ms        # Redis connection timeout
+  application:
+    rate-limiter:
+      enabled: true        # Enable/disable the rate limiter
+      window-size: 20      # Time window size in seconds for rate limiting
+      limit: 2           # Maximum allowed requests per window per key
+resilience4j:
+  ratelimiter:
+    instances:
+      default:
+        limit-for-period: 1             # Number of calls allowed per refresh period
+        limit-refresh-period: 10s          # Refresh period (time window)
+        timeout-duration: 0ms
+
 logging:
   level:
     org.springframework.web.servlet.handler.HandlerMappingIntrospector: error

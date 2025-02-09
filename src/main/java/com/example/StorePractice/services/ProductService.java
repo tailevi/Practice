@@ -2,6 +2,7 @@ package com.example.StorePractice.services;
 
 import com.example.StorePractice.annotations.LogUpdate;
 import com.example.StorePractice.exceptions.ProductsServiceException;
+import com.example.StorePractice.exceptions.RateLimiterException;
 import com.example.StorePractice.models.Product;
 import com.example.StorePractice.models.ProductDTO;
 import com.example.StorePractice.models.Reviews;
@@ -9,11 +10,10 @@ import com.example.StorePractice.models.ReviewsDTO;
 import com.example.StorePractice.payload.request.ProductRequest;
 import com.example.StorePractice.payload.request.ReviewRequest;
 import com.example.StorePractice.payload.response.GenericResponses;
-import com.example.StorePractice.payload.response.ProductResponse;
 import com.example.StorePractice.payload.response.ResponseEnum;
-import com.example.StorePractice.payload.response.ReviewsResponse;
 import com.example.StorePractice.reposetories.ProductRepo;
 import com.example.StorePractice.reposetories.ReviewesRepo;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -47,34 +47,43 @@ public class ProductService {
     @SneakyThrows
     @LogUpdate
     public GenericResponses deleteProductById(@NonNull ProductRequest productRequest){
-        redisTemplate.opsForHash().delete(PRODUCT_KEY,productRequest.getId());
-        productRepo.deleteById(productRequest.getId());
-        return GenericResponses.builder()
-                .message("Product was deleted")
-                .id(productRequest.getId())
-                .build();
+        try {
+            redisTemplate.opsForHash().delete(PRODUCT_KEY, productRequest.getId());
+            productRepo.deleteById(productRequest.getId());
+            return GenericResponses.builder()
+                    .message("Product was deleted")
+                    .id(productRequest.getId())
+                    .build();
+         }catch (RequestNotPermitted e){
+        throw new RateLimiterException("Rate limit exceeded. Please try again later.", e);
+        }
     }
 
     @SneakyThrows
     @Transactional
     @LogUpdate
     public ProductDTO findProductById(@NonNull ProductRequest productRequest){
-        Product cachedProduct = (Product) redisTemplate.opsForHash().get(PRODUCT_KEY, productRequest.getId());
-        ProductDTO productResponse;
+        try {
+            Product cachedProduct = (Product) redisTemplate.opsForHash().get(PRODUCT_KEY, productRequest.getId());
+            ProductDTO productResponse;
 
-        if(cachedProduct !=null){
-            List<Reviews> reviewsList = (List<Reviews>) redisTemplate.opsForHash().get(REVIEW_KEY , productRequest.getId());
-            cachedProduct.setReviews(reviewsList);
-            productResponse = mapProduct(cachedProduct);
+            if (cachedProduct != null) {
+                List<Reviews> reviewsList = (List<Reviews>) redisTemplate.opsForHash().get(REVIEW_KEY, productRequest.getId());
+                cachedProduct.setReviews(reviewsList);
+                productResponse = mapProduct(cachedProduct);
+                return productResponse;
+            }
+
+            Product product = productRepo.findById(productRequest.getId())
+                    .orElseThrow(() -> new ProductsServiceException("product was not found for the id: "+ productRequest.getId()));
+            productResponse = mapProduct(product);
+            redisTemplate.opsForHash().put(PRODUCT_KEY, productResponse.getId(), product);
+            productResponse.setReviews(getCechedReviews(product.getId(), product));
+
             return productResponse;
+        }catch (RequestNotPermitted e){
+            throw new RateLimiterException("Rate limit exceeded. Please try again later.", e);
         }
-
-        Product product = productRepo.findById(productRequest.getId()).orElseThrow();
-        productResponse = mapProduct(product);
-        redisTemplate.opsForHash().put(PRODUCT_KEY, productResponse.getId(), product);
-        productResponse.setReviews(getCechedReviews(product.getId(),product));
-
-        return productResponse;
     }
 
 
@@ -190,26 +199,42 @@ public class ProductService {
         throw new ProductsServiceException("Item with ID " + productRequest.getId() + " was not found or could not be deleted");
     }
 
+    @LogUpdate
+    @SneakyThrows
     @Transactional
-    public GenericResponses addReview(@NonNull Long id, ReviewRequest reviewRequest){
-        Product  product =  productRepo.findById(id).orElseThrow();
+    public GenericResponses addReview(@NonNull ProductRequest productRequest){
+        Product  product =  productRepo.findById(productRequest.getId()).orElseThrow( () -> new ProductsServiceException("product was not found for the id: "+ productRequest.getId()));
 
-        Reviews reviews = Reviews.builder()
-                .rating(reviewRequest.getRating())
-                .reviewerName(reviewRequest.getReviewerName())
-                .reviewerEmail(reviewRequest.getReviewerEmail())
-                .date(reviewRequest.getDate())
-                .comment(reviewRequest.getComment())
-                .build();
-        product.getReviews().add(reviews);
-        productRepo.save(product);
+        if(!productRequest.getReviewRequests().isEmpty()) {
+            List<ReviewRequest> reviewRequest = productRequest.getReviewRequests();
 
+            List<Reviews> newReviews = reviewRequest.stream()
+                    .map(request -> Reviews.builder()
+                    .rating(request .getRating())
+                    .reviewerName(request .getReviewerName())
+                    .reviewerEmail(request .getReviewerEmail())
+                    .date(request .getDate())
+                    .comment(request .getComment())
+                    .build()).toList();
 
+            List<Reviews> reviewsToSave = product.getReviews();
+            reviewsToSave.addAll(newReviews);
+            product.setReviews(reviewsToSave);
 
+            newReviews.forEach(reviews ->
+                    reviewRedisTemplet.opsForHash().put(REVIEW_KEY, reviews.getId(), reviews)
+            );
+
+            productRepo.save(product);
+
+            return GenericResponses.builder()
+                    .title("reviews added successfully ")
+                    .message(ResponseEnum.ADDED.toString())
+                    .build();
+        }
         return GenericResponses.builder()
-                .id(reviews.getId())
-                .title(reviews.getReviewerName())
-                .message(ResponseEnum.ADDED.toString())
+                .message("There was not Review submitted")
+                .id(productRequest.getId())
                 .build();
     }
 
