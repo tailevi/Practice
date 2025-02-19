@@ -28,6 +28,7 @@ public class AccountService {
                 .lastName(account.getLastName())
                 .role(Role.USER)
                 .build();
+        userRepo.save(newAccount);
         return GenericResponses.builder()
                 .message("Account Made")
                 .build();
