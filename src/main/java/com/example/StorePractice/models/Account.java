@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name ="account")
-public class User {
+public class Account {
     @Id
     @GeneratedValue
     private Integer id;
